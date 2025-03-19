@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/rodrigobastosv/fancy_credit_card_input/graph/badge.svg?token=o49uk7o6iw)](https://codecov.io/gh/rodrigobastosv/fancy_credit_card_input)
+
 <!--
 This README describes the package. If you publish this package to pub.dev,
 this README's contents appear on the landing page for your package.

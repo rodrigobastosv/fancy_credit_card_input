@@ -1,0 +1,27 @@
+name: Dart Package Tests & Code Coverage
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Run Tests & Upload Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2.3.0
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: "stable"
+      - run: flutter pub get
+      - run: flutter test --coverage
+      - uses: codecov/codecov-action@v1.0.7
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+          file: ./coverage/lcov.info
