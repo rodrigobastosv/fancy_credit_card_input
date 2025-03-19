@@ -1,5 +1,5 @@
 name: fancy_credit_card_input
-description: "A new Flutter package project."
+description: "A highly customizable credit card input field with support for card number, expiry date and cvv with some built in animations"
 version: 1.0.0
 homepage: https://github.com/rodrigobastosv/fancy_credit_card_input
 

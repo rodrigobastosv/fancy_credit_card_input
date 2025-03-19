@@ -20,8 +20,8 @@ jobs:
           channel: "stable"
       - run: flutter pub get
       - run: flutter test --coverage
-      - uses: codecov/codecov-action@v1.0.7
-        if: matrix.os == 'ubuntu-latest'
+      - uses: codecov/codecov-action@v5
         with:
-          token: ${{secrets.CODECOV_TOKEN}}
-          file: ./coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: rodrigobastosv/fancy_credit_card_input
+          
