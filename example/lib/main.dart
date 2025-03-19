@@ -33,6 +33,9 @@ class MyApp extends StatelessWidget {
                     // ignore: avoid_print
                     print(cardData);
                   },
+                  onChangedCardNumber: print,
+                  onChangedExpiryDate: print,
+                  onChangedCvv: print,
                   cardNumberBuilder: (brand, cardLastFourDigits) => Row(
                     children: [
                       _buildCardBrand(brand),

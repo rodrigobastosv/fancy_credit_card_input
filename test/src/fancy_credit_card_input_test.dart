@@ -73,7 +73,9 @@ void main() {
     expect(find.text('Enter your Card Number'), findsOneWidget);
   });
 
-  testWidgets('should execute the cardNumberBuilder after the card number field is completely filled', (tester) async {
+  testWidgets(
+      'should execute the cardNumberBuilder after the card number field is completely filled',
+      (tester) async {
     var cardNumberBuilderCalled = false;
     await pumpFancyCreditCardInput(
       tester,
@@ -89,21 +91,27 @@ void main() {
     expect(cardNumberBuilderCalled, true);
   });
 
-  testWidgets('should start colapsed when theres an initial value for the card number', (tester) async {
+  testWidgets(
+      'should start colapsed when theres an initial value for the card number',
+      (tester) async {
     await pumpFancyCreditCardInput(
       tester,
       cardNumberInitialValue: '4111111111111234',
-      cardNumberBuilder: (brand, cardLastFourDigits) => Text(cardLastFourDigits),
+      cardNumberBuilder: (brand, cardLastFourDigits) =>
+          Text(cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       cardNumberHint: 'Enter your Card Number',
     );
     expect(find.text('1234'), findsOneWidget);
   });
 
-  testWidgets('should not show the last four digits if the card number is not completely filled', (tester) async {
+  testWidgets(
+      'should not show the last four digits if the card number is not completely filled',
+      (tester) async {
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) => Text(key: const ValueKey('last-four-digits'), cardLastFourDigits),
+      cardNumberBuilder: (brand, cardLastFourDigits) =>
+          Text(key: const ValueKey('last-four-digits'), cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       cardNumberHint: 'Enter your Card Number',
     );
@@ -111,10 +119,13 @@ void main() {
     expect(find.text('Enter your Card Number'), findsOneWidget);
   });
 
-  testWidgets('should expand the card number again after being clicked while being colapsed', (tester) async {
+  testWidgets(
+      'should expand the card number again after being clicked while being colapsed',
+      (tester) async {
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) => Text(key: const ValueKey('last-four-digits'), cardLastFourDigits),
+      cardNumberBuilder: (brand, cardLastFourDigits) =>
+          Text(key: const ValueKey('last-four-digits'), cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
     );
     await enterCardNumber(tester, cardNumber: '4111111111111234');
@@ -126,10 +137,12 @@ void main() {
     expect(find.text('4111 1111 1111 1234'), findsOneWidget);
   });
 
-  testWidgets('should input the expiry correctly masking the value', (tester) async {
+  testWidgets('should input the expiry correctly masking the value',
+      (tester) async {
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) => Text(cardLastFourDigits),
+      cardNumberBuilder: (brand, cardLastFourDigits) =>
+          Text(cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       cardNumberHint: 'Enter your Card Number',
     );
@@ -138,10 +151,12 @@ void main() {
     expect(find.text('12/25'), findsOneWidget);
   });
 
-  testWidgets('should call error builder showing error when validates', (tester) async {
+  testWidgets('should call error builder showing error when validates',
+      (tester) async {
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) => Text(cardLastFourDigits),
+      cardNumberBuilder: (brand, cardLastFourDigits) =>
+          Text(cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       errorBuilder: (errorMessage) => const Text('Error'),
     );
@@ -149,10 +164,13 @@ void main() {
     expect(find.text('Error'), findsOneWidget);
   });
 
-  testWidgets('should input the expiry correctly masking the value with the full year ExpiryDateType', (tester) async {
+  testWidgets(
+      'should input the expiry correctly masking the value with the full year ExpiryDateType',
+      (tester) async {
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) => Text(cardLastFourDigits),
+      cardNumberBuilder: (brand, cardLastFourDigits) =>
+          Text(cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       expiryDateType: ExpiryDateType.fullYear,
     );
@@ -161,12 +179,15 @@ void main() {
     expect(find.text('12/2025'), findsOneWidget);
   });
 
-  testWidgets('should call onFormCompleted with the correct data when all the values are inputed', (tester) async {
+  testWidgets(
+      'should call onFormCompleted with the correct data when all the values are inputed',
+      (tester) async {
     var onFormCompletedCalled = false;
     CardData? cardData;
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) => Text(cardLastFourDigits),
+      cardNumberBuilder: (brand, cardLastFourDigits) =>
+          Text(cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       onFormCompleted: (data) {
         onFormCompletedCalled = true;
@@ -184,13 +205,15 @@ void main() {
     expect(cardData?.cvv, '123');
   });
 
-  testWidgets('should call all the validators when they are given', (tester) async {
+  testWidgets('should call all the validators when they are given',
+      (tester) async {
     var cardNumberValidatorCalled = false;
     var expiryValidatorCalled = false;
     var cvvValidatorCalled = false;
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) => Text(cardLastFourDigits),
+      cardNumberBuilder: (brand, cardLastFourDigits) =>
+          Text(cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       onFormCompleted: (data) {},
       cardNumberValidator: (cardNumber) {

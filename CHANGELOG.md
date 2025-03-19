@@ -1,3 +1,7 @@
+## 1.0.3
+
+Adding onChange properties
+
 ## 1.0.2
 
 Improve colapsed state while feeding initial values

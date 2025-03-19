@@ -4,19 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 typedef LabelBuilder = Widget Function(bool hasError);
-typedef CardNumberBuilder = Widget Function(CardBrand brand, String cardLastFourDigits);
+typedef CardNumberBuilder = Widget Function(
+    CardBrand brand, String cardLastFourDigits);
 typedef DecorationBuilder = Decoration Function(bool hasFocus, bool hasError);
 typedef ErrorBuilder = Widget Function(String errorMessage);
 
 class FancyCreditCardInput extends StatefulWidget {
   const FancyCreditCardInput({
-    required this.onFormCompleted,
     required this.cardNumberBuilder,
     required this.decorationBuilder,
+    this.onFormCompleted,
     this.cardNumberInitialValue,
     this.expiryMonthInitialValue,
     this.expiryYearInitialValue,
     this.cvvInitialValue,
+    this.onChangedCardNumber,
+    this.onChangedExpiryDate,
+    this.onChangedCvv,
     this.labelBuilder,
     this.errorBuilder,
     this.cardNumberMask = '#### #### #### #### ###',
@@ -39,7 +43,7 @@ class FancyCreditCardInput extends StatefulWidget {
   ///
   /// This callback is often called with null when the form is not complete. This happens, for instance, when the user
   /// edits some field values and the fields becomes not filled
-  final void Function(CardData?) onFormCompleted;
+  final void Function(CardData?)? onFormCompleted;
 
   /// Builder executed whenever the card number is filled. You have the liberty to add whatever component you want here
   ///
@@ -63,6 +67,15 @@ class FancyCreditCardInput extends StatefulWidget {
 
   /// Initial value for the cvv field
   final String? cvvInitialValue;
+
+  /// Callback executed whenever the card number changes
+  final ValueChanged<String>? onChangedCardNumber;
+
+  /// Callback executed whenever the expiry date changes
+  final ValueChanged<String>? onChangedExpiryDate;
+
+  /// Callback executed whenever the cvv changes
+  final ValueChanged<String>? onChangedCvv;
 
   /// Builder executed to customize the label above the component.
   ///
@@ -140,37 +153,57 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
 
   CardBrand _cardBrand = CardBrand.unknown;
 
-  Duration get animationDuration => widget.animationDuration ?? const Duration(milliseconds: 300);
+  Duration get animationDuration =>
+      widget.animationDuration ?? const Duration(milliseconds: 300);
 
   String get _lastFourDigits {
     final creditCardNumber = cardNumberMask.getUnmaskedText();
-    return creditCardNumber.length > 4 ? creditCardNumber.substring(creditCardNumber.length - 4) : creditCardNumber;
+    return creditCardNumber.length > 4
+        ? creditCardNumber.substring(creditCardNumber.length - 4)
+        : creditCardNumber;
   }
 
-  bool get _hasFocus => _cardNumberFocusNode.hasFocus || _expiryFocusNode.hasFocus || _cvvFocusNode.hasFocus;
+  bool get _hasFocus =>
+      _cardNumberFocusNode.hasFocus ||
+      _expiryFocusNode.hasFocus ||
+      _cvvFocusNode.hasFocus;
   bool get _hasError => _errorMessage != null;
 
   @override
   void initState() {
     super.initState();
 
-    final initialExpiryDate = widget.expiryMonthInitialValue != null && widget.expiryYearInitialValue != null
+    final initialExpiryDate = widget.expiryMonthInitialValue != null &&
+            widget.expiryYearInitialValue != null
         ? switch (widget.expiryDateType) {
-            ExpiryDateType.regular => '${widget.expiryMonthInitialValue}/${widget.expiryYearInitialValue}',
-            ExpiryDateType.fullYear => '${widget.expiryMonthInitialValue}/20${widget.expiryYearInitialValue}',
+            ExpiryDateType.regular =>
+              '${widget.expiryMonthInitialValue}/${widget.expiryYearInitialValue}',
+            ExpiryDateType.fullYear =>
+              '${widget.expiryMonthInitialValue}/20${widget.expiryYearInitialValue}',
           }
         : null;
-    _cardNumberController = TextEditingController(text: widget.cardNumberInitialValue);
+    _cardNumberController =
+        TextEditingController(text: widget.cardNumberInitialValue);
     _expiryDateController = TextEditingController(text: initialExpiryDate);
     _cvvController = TextEditingController(text: widget.cvvInitialValue);
 
-    cardNumberMask = MaskTextInputFormatter(mask: widget.cardNumberMask, initialText: widget.cardNumberInitialValue, filter: digitFilter);
-    expiryMask = MaskTextInputFormatter(mask: widget.expiryDateType.value, initialText: initialExpiryDate, filter: digitFilter);
-    cvvMask = MaskTextInputFormatter(mask: widget.cvvMask, initialText: widget.cvvInitialValue, filter: digitFilter);
+    cardNumberMask = MaskTextInputFormatter(
+        mask: widget.cardNumberMask,
+        initialText: widget.cardNumberInitialValue,
+        filter: digitFilter);
+    expiryMask = MaskTextInputFormatter(
+        mask: widget.expiryDateType.value,
+        initialText: initialExpiryDate,
+        filter: digitFilter);
+    cvvMask = MaskTextInputFormatter(
+        mask: widget.cvvMask,
+        initialText: widget.cvvInitialValue,
+        filter: digitFilter);
 
     _cardNumberFocusNode.addListener(_cardNumberFieldLostFocusListener);
 
-    if (hasCardNumberInformation(_cardNumberController.text, _expiryDateController.text, _cvvController.text)) {
+    if (hasCardNumberInformation(_cardNumberController.text,
+        _expiryDateController.text, _cvvController.text)) {
       setState(() {
         _isCollapsed = true;
       });
@@ -207,15 +240,23 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
                     firstChild: _buildCardNumberField(),
                     secondChild: GestureDetector(
                       onTap: _expandCardNumberField,
-                      child: widget.cardNumberBuilder(_cardBrand, _lastFourDigits),
+                      child:
+                          widget.cardNumberBuilder(_cardBrand, _lastFourDigits),
                     ),
-                    crossFadeState: _isCollapsed ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                    crossFadeState: _isCollapsed
+                        ? CrossFadeState.showSecond
+                        : CrossFadeState.showFirst,
                     duration: animationDuration,
                     firstCurve: widget.animationCurve,
                     secondCurve: widget.animationCurve,
                   ),
                 ),
-                if (_isCollapsed) ...[const SizedBox(width: 12), _buildExpiryField(), const SizedBox(width: 8), _buildCVVField()],
+                if (_isCollapsed) ...[
+                  const SizedBox(width: 12),
+                  _buildExpiryField(),
+                  const SizedBox(width: 8),
+                  _buildCVVField()
+                ],
               ],
             ),
           ),
@@ -242,24 +283,32 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
 
     _validateFields(cardNumberMasked, expiryMasked, cvvMasked);
 
-    if (_cardBrand != CardBrand.unknown && expiryText.length == widget.expiryDateType.length && cvvText.length == 3) {
-      final expiryValues = expiryMasked.split('/');
-      widget.onFormCompleted(
-        CardData(
-          brand: _cardBrand,
-          cardNumber: cardNumberText,
-          expiryMonth: int.parse(expiryValues.first),
-          expiryYear:
-              int.parse(switch (widget.expiryDateType) { ExpiryDateType.regular => expiryValues.last, ExpiryDateType.fullYear => '20${expiryValues.last}' }),
-          cvv: cvvText,
-        ),
-      );
-    } else {
-      widget.onFormCompleted(null);
+    if (widget.onFormCompleted != null) {
+      if (_cardBrand != CardBrand.unknown &&
+          expiryText.length == widget.expiryDateType.length &&
+          cvvText.length == 3) {
+        final expiryValues = expiryMasked.split('/');
+
+        widget.onFormCompleted!(
+          CardData(
+            brand: _cardBrand,
+            cardNumber: cardNumberText,
+            expiryMonth: int.parse(expiryValues.first),
+            expiryYear: int.parse(switch (widget.expiryDateType) {
+              ExpiryDateType.regular => expiryValues.last,
+              ExpiryDateType.fullYear => '20${expiryValues.last}'
+            }),
+            cvv: cvvText,
+          ),
+        );
+      } else {
+        widget.onFormCompleted!(null);
+      }
     }
   }
 
-  void _validateFields(String cardNumberMasked, String expiryMasked, String cvvMasked) {
+  void _validateFields(
+      String cardNumberMasked, String expiryMasked, String cvvMasked) {
     if (widget.cardNumberValidator != null) {
       _errorMessage = widget.cardNumberValidator!(cardNumberMasked);
     }
@@ -274,9 +323,11 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
     setState(() {});
   }
 
-  bool hasCardNumberInformation(String cardNumberMasked, String expiryMasked, String cvvMasked) {
+  bool hasCardNumberInformation(
+      String cardNumberMasked, String expiryMasked, String cvvMasked) {
     final cardNumber = cardNumberMask.unmaskText(cardNumberMasked);
-    return widget.supportedCardLengths.contains(cardNumber.length) && !_editCardNumber;
+    return widget.supportedCardLengths.contains(cardNumber.length) &&
+        !_editCardNumber;
   }
 
   Widget _buildCardNumberField() => TextField(
@@ -285,8 +336,13 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
         keyboardType: TextInputType.number,
         inputFormatters: [cardNumberMask],
         onChanged: (cardNumberMasked) {
+          if (widget.onChangedCardNumber != null) {
+            widget.onChangedCardNumber!(cardNumberMasked);
+          }
+
           final cardNumber = cardNumberMask.unmaskText(cardNumberMasked);
-          if (widget.supportedCardLengths.contains(cardNumber.length) && !_editCardNumber) {
+          if (widget.supportedCardLengths.contains(cardNumber.length) &&
+              !_editCardNumber) {
             setState(() {
               _isCollapsed = true;
               _cardBrand = CardBrand.fromCardNumber(cardNumber);
@@ -320,6 +376,10 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
           keyboardType: TextInputType.datetime,
           inputFormatters: [expiryMask],
           onChanged: (expiryMasked) {
+            if (widget.onChangedExpiryDate != null) {
+              widget.onChangedExpiryDate!(expiryMasked);
+            }
+
             if (expiryMask.isFill()) {
               Future.delayed(const Duration(milliseconds: 200), () {
                 if (mounted) {
@@ -353,6 +413,10 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
             hintStyle: widget.hintTextStyle,
           ),
           onChanged: (cvvMasked) {
+            if (widget.onChangedCvv != null) {
+              widget.onChangedCvv!(cvvMasked);
+            }
+
             _checkFormCompleted();
           },
         ),
