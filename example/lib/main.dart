@@ -32,14 +32,16 @@ class MyApp extends StatelessWidget {
                   cardNumberBuilder: (brand, cardLastFourDigits) => Row(
                     children: [
                       _buildCardBrand(brand),
-                      Text('•••• $cardLastFourDigits', style: const TextStyle(fontSize: 16)),
+                      Text('•••• $cardLastFourDigits',
+                          style: const TextStyle(fontSize: 16)),
                       const SizedBox(width: 12),
                     ],
                   ),
                   decorationBuilder: (hasFocus, hasError) => BoxDecoration(
                     color: hasError ? const Color(0xFFF8E9E9) : null,
                     borderRadius: const BorderRadius.all(Radius.circular(4)),
-                    border: Border.all(color: _getBorderColor(hasFocus, hasError)),
+                    border:
+                        Border.all(color: _getBorderColor(hasFocus, hasError)),
                   ),
                   errorBuilder: (errorMessage) => Align(
                     alignment: Alignment.centerLeft,

@@ -1,41 +1,48 @@
 [![codecov](https://codecov.io/gh/rodrigobastosv/fancy_credit_card_input/graph/badge.svg?token=o49uk7o6iw)](https://codecov.io/gh/rodrigobastosv/fancy_credit_card_input)
 
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+<a href="https://www.buymeacoffee.com/rodrigobastosv" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
+Have you ever wanted a Credit Card input component that has everything you need? fancy_credit_card_input have everything you need in a highly customizable component.
 
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+![Demo](https://github.com/rodrigobastosv/fancy_credit_card_input/blob/main/docs/recording.gif?raw=true)
 
 ## Features
-
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- Nice colapsing animation when the card number is filled
+- Support for next focus to make it easier to input all the fields 
+- Automatic brand detection while typing the card number
+- You can pass validators to all your inputs (Card Number, Expiry Date, CVV)
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+Using the component is just as simple as:
 
 ```dart
-const like = 'sample';
+FancyCreditCardInput(
+    onFormCompleted: (cardData) {
+        print(cardData);
+    },
+    cardNumberBuilder: (brand, cardLastFourDigits) => Row(
+        children: [
+            _buildCardBrand(brand),
+            Text('•••• $cardLastFourDigits', style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 12),
+        ],
+    ),
+    decorationBuilder: (hasFocus, hasError) => BoxDecoration(
+        color: hasError ? const Color(0xFFF8E9E9) : null,
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
+        border: Border.all(color: _getBorderColor(hasFocus, hasError)),
+    ),
+)
 ```
 
-## Additional information
+The component relies a lot in using builders so it can be as much customizable as possible.
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+Pretty much everything can be customizable.
+
+## Suggestions & Bugs
+
+For any suggestions or bug report please head to [issue tracker][tracker].
+
+[tracker]: https://github.com/rodrigobastosv/fancy_credit_card_input/issues
+
