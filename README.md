@@ -14,15 +14,35 @@ Have you ever wanted a Credit Card input component that has everything you need?
 
 ## Getting started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
-
-## Usage
-
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+Using the component is just as simple as:
 
 ```dart
-const like = 'sample';
+FancyCreditCardInput(
+    onFormCompleted: (cardData) {
+        print(cardData);
+    },
+    cardNumberBuilder: (brand, cardLastFourDigits) => Row(
+        children: [
+            _buildCardBrand(brand),
+            Text('•••• $cardLastFourDigits', style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 12),
+        ],
+    ),
+    decorationBuilder: (hasFocus, hasError) => BoxDecoration(
+        color: hasError ? const Color(0xFFF8E9E9) : null,
+        borderRadius: const BorderRadius.all(Radius.circular(4)),
+        border: Border.all(color: _getBorderColor(hasFocus, hasError)),
+    ),
+)
 ```
+
+The component relies a lot in using builders so it can be as much customizable as possible.
+
+Pretty much everything can be customizable.
+
+## Suggestions & Bugs
+
+For any suggestions or bug report please head to [issue tracker][tracker].
+
+[tracker]: https://github.com/rodrigobastosv/fancy_credit_card_input/issues
 
