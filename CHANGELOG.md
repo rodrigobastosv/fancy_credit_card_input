@@ -1,3 +1,7 @@
+## 1.0.4
+
+Adds suport for different flex for each field
+
 ## 1.0.3
 
 Adding onChange properties

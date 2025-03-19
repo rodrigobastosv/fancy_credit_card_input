@@ -25,10 +25,6 @@ class MyApp extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 FancyCreditCardInput(
-                  cardNumberInitialValue: '41111111111111',
-                  expiryMonthInitialValue: 11,
-                  expiryYearInitialValue: 25,
-                  cvvInitialValue: '123',
                   onFormCompleted: (cardData) {
                     // ignore: avoid_print
                     print(cardData);

@@ -18,6 +18,9 @@ class FancyCreditCardInput extends StatefulWidget {
     this.expiryMonthInitialValue,
     this.expiryYearInitialValue,
     this.cvvInitialValue,
+    this.cardNumberFlex,
+    this.expiryFlex,
+    this.cvvFlex,
     this.onChangedCardNumber,
     this.onChangedExpiryDate,
     this.onChangedCvv,
@@ -67,6 +70,15 @@ class FancyCreditCardInput extends StatefulWidget {
 
   /// Initial value for the cvv field
   final String? cvvInitialValue;
+
+  /// Flex space that the card number field takes
+  final int? cardNumberFlex;
+
+  /// Flex space that the expiry field takes
+  final int? expiryFlex;
+
+  /// Flex space that the cvv field takes
+  final int? cvvFlex;
 
   /// Callback executed whenever the card number changes
   final ValueChanged<String>? onChangedCardNumber;
@@ -235,7 +247,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
             child: Row(
               children: [
                 Expanded(
-                  flex: 9,
+                  flex: widget.cardNumberFlex ?? 9,
                   child: AnimatedCrossFade(
                     firstChild: _buildCardNumberField(),
                     secondChild: GestureDetector(
@@ -349,7 +361,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
             });
             Future.delayed(const Duration(milliseconds: 200), () {
               if (mounted) {
-                FocusScope.of(context).nextFocus();
+                _expiryFocusNode.requestFocus();
               }
               _checkFormCompleted();
             });
@@ -369,7 +381,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
       );
 
   Widget _buildExpiryField() => Expanded(
-        flex: 3,
+        flex: widget.expiryFlex ?? 3,
         child: TextField(
           controller: _expiryDateController,
           focusNode: _expiryFocusNode,
@@ -383,7 +395,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
             if (expiryMask.isFill()) {
               Future.delayed(const Duration(milliseconds: 200), () {
                 if (mounted) {
-                  FocusScope.of(context).nextFocus();
+                  _cvvFocusNode.requestFocus();
                 }
               });
             }
@@ -399,7 +411,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
       );
 
   Widget _buildCVVField() => Expanded(
-        flex: 2,
+        flex: widget.cvvFlex ?? 2,
         child: TextField(
           controller: _cvvController,
           focusNode: _cvvFocusNode,
