@@ -1,4 +1,4 @@
-name: Dart Package Tests & Code Coverage
+name: Package Tests & Code Coverage
 
 on:
   push:
