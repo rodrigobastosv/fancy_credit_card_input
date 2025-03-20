@@ -1,6 +1,6 @@
 name: fancy_credit_card_input
 description: "A highly customizable credit card input field with support for card number, expiry date and cvv with some built in animations"
-version: 1.0.5
+version: 1.0.6
 homepage: https://github.com/rodrigobastosv/fancy_credit_card_input
 
 environment:

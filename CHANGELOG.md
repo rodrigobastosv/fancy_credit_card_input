@@ -1,3 +1,7 @@
+## 1.0.6
+
+Fix bug where component was not colapsing when losing focus in some situations
+
 ## 1.0.5
 
 Feels adjusts to make animation more smooth and realistic
