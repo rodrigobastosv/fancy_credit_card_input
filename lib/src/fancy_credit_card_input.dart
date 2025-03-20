@@ -248,26 +248,43 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
               children: [
                 Expanded(
                   flex: widget.cardNumberFlex ?? 9,
-                  child: AnimatedCrossFade(
-                    firstChild: _buildCardNumberField(),
-                    secondChild: GestureDetector(
-                      onTap: _expandCardNumberField,
-                      child:
-                          widget.cardNumberBuilder(_cardBrand, _lastFourDigits),
-                    ),
-                    crossFadeState: _isCollapsed
-                        ? CrossFadeState.showSecond
-                        : CrossFadeState.showFirst,
+                  child: AnimatedSwitcher(
                     duration: animationDuration,
-                    firstCurve: widget.animationCurve,
-                    secondCurve: widget.animationCurve,
+                    reverseDuration: Duration.zero,
+                    transitionBuilder: (child, animation) {
+                      if (child.key == const ValueKey('cardNumber')) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        );
+                      }
+
+                      final slideAnimation = Tween<Offset>(
+                        begin: const Offset(0.3, 0),
+                        end: const Offset(0, 0),
+                      ).animate(animation);
+
+                      return SlideTransition(
+                        position: slideAnimation,
+                        child: child,
+                      );
+                    },
+                    child: _isCollapsed
+                        ? GestureDetector(
+                            key: const ValueKey('collapsed'),
+                            onTap: _expandCardNumberField,
+                            child: widget.cardNumberBuilder(
+                                _cardBrand, _lastFourDigits),
+                          )
+                        : _buildCardNumberField(
+                            key: const ValueKey('cardNumber')),
                   ),
                 ),
                 if (_isCollapsed) ...[
                   const SizedBox(width: 12),
                   _buildExpiryField(),
                   const SizedBox(width: 8),
-                  _buildCVVField()
+                  _buildCVVField(),
                 ],
               ],
             ),
@@ -342,7 +359,8 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
         !_editCardNumber;
   }
 
-  Widget _buildCardNumberField() => TextField(
+  Widget _buildCardNumberField({Key? key}) => TextField(
+        key: key,
         controller: _cardNumberController,
         focusNode: _cardNumberFocusNode,
         keyboardType: TextInputType.number,

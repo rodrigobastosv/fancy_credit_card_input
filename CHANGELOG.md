@@ -1,3 +1,7 @@
+## 1.0.5
+
+Feels adjusts to make animation more smooth and realistic
+
 ## 1.0.4
 
 Adds suport for different flex for each field
