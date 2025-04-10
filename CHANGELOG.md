@@ -1,3 +1,7 @@
+## 1.0.7
+
+Adjust the way CVV text field checks its length
+
 ## 1.0.6
 
 Fix bug where component was not colapsing when losing focus in some situations
