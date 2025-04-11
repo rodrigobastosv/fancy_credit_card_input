@@ -1,3 +1,7 @@
+## 1.0.8
+
+Change to support amex cards with length of 15
+
 ## 1.0.7
 
 Adjust the way CVV text field checks its length

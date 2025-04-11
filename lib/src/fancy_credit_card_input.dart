@@ -26,7 +26,7 @@ class FancyCreditCardInput extends StatefulWidget {
     this.labelBuilder,
     this.errorBuilder,
     this.cardNumberMask = '#### #### #### #### ###',
-    this.supportedCardLengths = const [16, 19],
+    this.supportedCardLengths = const [15, 16, 19],
     this.expiryDateType = ExpiryDateType.regular,
     this.cvvMask = '###',
     this.cardNumberHint,
