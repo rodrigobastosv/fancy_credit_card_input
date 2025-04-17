@@ -194,7 +194,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
 
     _cardNumberFocusNode.addListener(_cardNumberFieldLostFocusListener);
 
-    if (hasCardNumberInformation(_cardNumberController.text, _expiryDateController.text, _cvvController.text)) {
+    if (hasCardNumberInformation(_cardNumberController.text)) {
       setState(() {
         _isCollapsed = true;
       });
@@ -206,7 +206,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
       setState(() => _editCardNumber = false);
     }
 
-    if (hasCardNumberInformation(_cardNumberController.text, _expiryDateController.text, _cvvController.text)) {
+    if (hasCardNumberInformation(_cardNumberController.text)) {
       setState(() {
         _isCollapsed = true;
       });
@@ -330,9 +330,27 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
     setState(() {});
   }
 
-  bool hasCardNumberInformation(String cardNumberMasked, String expiryMasked, String cvvMasked) {
+  bool hasCardNumberInformation(String cardNumberMasked) {
     final cardNumber = cardNumberMask.unmaskText(cardNumberMasked);
-    return widget.supportedCardLengths.contains(cardNumber.length) && !_editCardNumber;
+    final cardLength = cardNumber.length;
+    final brand = CardBrand.fromCardNumber(cardNumber);
+
+    if (!_editCardNumber) {
+      if (brand == CardBrand.visa && cardLength != 16) {
+        return false;
+      }
+
+      if (brand == CardBrand.mastercard && cardLength != 16) {
+        return false;
+      }
+
+      if (brand == CardBrand.amex && cardLength != 15) {
+        return false;
+      }
+
+      return widget.supportedCardLengths.contains(cardLength);
+    }
+    return false;
   }
 
   Widget _buildCardNumberField({Key? key}) => TextField(
@@ -347,7 +365,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
           }
 
           final cardNumber = cardNumberMask.unmaskText(cardNumberMasked);
-          if (widget.supportedCardLengths.contains(cardNumber.length) && !_editCardNumber) {
+          if (hasCardNumberInformation(cardNumberMasked)) {
             setState(() {
               _isCollapsed = true;
               _cardBrand = CardBrand.fromCardNumber(cardNumber);
@@ -410,7 +428,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
           focusNode: _cvvFocusNode,
           obscureText: true,
           keyboardType: TextInputType.number,
-          maxLength: widget.cvvMask.length,
+          maxLength: _cardBrand == CardBrand.amex ? 4 : 3,
           decoration: InputDecoration(
             hintText: widget.cvvHint,
             counterText: '',

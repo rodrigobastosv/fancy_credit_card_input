@@ -1,3 +1,7 @@
+## 1.0.9
+
+Improve card validations
+
 ## 1.0.8
 
 Change to support amex cards with length of 15

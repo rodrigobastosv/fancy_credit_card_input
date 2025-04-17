@@ -56,6 +56,7 @@ class MyApp extends StatelessWidget {
                   cardNumberHint: 'Enter card number',
                   expiryHint: 'MM/YY',
                   cvvHint: 'CVV',
+                  supportedCardLengths: const [15, 16, 19],
                 ),
               ],
             ),
