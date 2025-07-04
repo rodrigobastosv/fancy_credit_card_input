@@ -316,17 +316,10 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
   }
 
   void _validateFields(String cardNumberMasked, String expiryMasked, String cvvMasked) {
-    if (widget.cardNumberValidator != null) {
-      _errorMessage = widget.cardNumberValidator!(cardNumberMasked);
-    }
-
-    if (widget.expiryValidator != null) {
-      _errorMessage = widget.expiryValidator!(expiryMasked);
-    }
-
-    if (widget.cvvValidator != null) {
-      _errorMessage = widget.cvvValidator!(cvvMasked);
-    }
+    final cardError = widget.cardNumberValidator?.call(cardNumberMasked);
+    final expiryError = widget.expiryValidator?.call(expiryMasked);
+    final cvvError = widget.cvvValidator?.call(cvvMasked);
+    _errorMessage = cardError ?? expiryError ?? cvvError;
     setState(() {});
   }
 
