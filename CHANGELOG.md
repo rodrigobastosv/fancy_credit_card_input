@@ -1,3 +1,7 @@
+## 1.0.10
+
+Add cvv input formatter
+
 ## 1.0.9
 
 Improve card validations

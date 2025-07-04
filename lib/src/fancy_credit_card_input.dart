@@ -428,6 +428,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
           focusNode: _cvvFocusNode,
           obscureText: true,
           keyboardType: TextInputType.number,
+          inputFormatters: [cvvMask],
           maxLength: _cardBrand == CardBrand.amex ? 4 : 3,
           decoration: InputDecoration(
             hintText: widget.cvvHint,
