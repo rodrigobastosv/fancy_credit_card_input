@@ -1,3 +1,7 @@
+## 1.0.11
+
+Adjust the validation error precedence
+
 ## 1.0.10
 
 Add cvv input formatter
