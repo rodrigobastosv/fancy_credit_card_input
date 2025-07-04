@@ -188,8 +188,10 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
     _expiryDateController = TextEditingController(text: initialExpiryDate);
     _cvvController = TextEditingController(text: widget.cvvInitialValue);
 
-    cardNumberMask = MaskTextInputFormatter(mask: widget.cardNumberMask, initialText: widget.cardNumberInitialValue, filter: digitFilter);
-    expiryMask = MaskTextInputFormatter(mask: widget.expiryDateType.value, initialText: initialExpiryDate, filter: digitFilter);
+    cardNumberMask = MaskTextInputFormatter(
+        mask: widget.cardNumberMask, initialText: widget.cardNumberInitialValue, filter: digitFilter);
+    expiryMask =
+        MaskTextInputFormatter(mask: widget.expiryDateType.value, initialText: initialExpiryDate, filter: digitFilter);
     cvvMask = MaskTextInputFormatter(mask: widget.cvvMask, initialText: widget.cvvInitialValue, filter: digitFilter);
 
     _cardNumberFocusNode.addListener(_cardNumberFieldLostFocusListener);
@@ -304,8 +306,10 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
             brand: _cardBrand,
             cardNumber: cardNumberText,
             expiryMonth: int.parse(expiryValues.first),
-            expiryYear:
-                int.parse(switch (widget.expiryDateType) { ExpiryDateType.regular => expiryValues.last, ExpiryDateType.fullYear => '20${expiryValues.last}' }),
+            expiryYear: int.parse(switch (widget.expiryDateType) {
+              ExpiryDateType.regular => expiryValues.last,
+              ExpiryDateType.fullYear => '20${expiryValues.last}'
+            }),
             cvv: cvvText,
           ),
         );
@@ -428,6 +432,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
           focusNode: _cvvFocusNode,
           obscureText: true,
           keyboardType: TextInputType.number,
+          inputFormatters: [cvvMask],
           maxLength: _cardBrand == CardBrand.amex ? 4 : 3,
           decoration: InputDecoration(
             hintText: widget.cvvHint,
