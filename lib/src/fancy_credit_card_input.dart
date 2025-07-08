@@ -341,6 +341,10 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
         return false;
       }
 
+      if (brand == CardBrand.discover && cardLength != 16) {
+        return false;
+      }
+
       return widget.supportedCardLengths.contains(cardLength);
     }
     return false;

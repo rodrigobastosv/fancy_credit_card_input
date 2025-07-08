@@ -1,3 +1,7 @@
+## 1.0.12
+
+Fix validation for Discover cards
+
 ## 1.0.11
 
 Adjust the validation error precedence
