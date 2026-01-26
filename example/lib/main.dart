@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
                   onChangedCardNumber: print,
                   onChangedExpiryDate: print,
                   onChangedCvv: print,
-                  cardNumberBuilder: (brand, cardLastFourDigits) => Row(
+                  cardNumberBuilder: (brand, cardLastFourDigits, hasError) => Row(
                     children: [
                       _buildCardBrand(brand),
                       Text('•••• $cardLastFourDigits',
