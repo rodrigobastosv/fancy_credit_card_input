@@ -57,7 +57,7 @@ void main() {
   testWidgets('should show card number hint', (tester) async {
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) => const SizedBox(),
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) => const SizedBox(),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       cardNumberHint: 'Enter your Card Number',
     );
@@ -66,7 +66,7 @@ void main() {
 
   testWidgets('should show widget with expiry type full year', (tester) async {
     await pumpFancyCreditCardInput(tester,
-        cardNumberBuilder: (brand, cardLastFourDigits) => const SizedBox(),
+        cardNumberBuilder: (brand, cardLastFourDigits, hasError) => const SizedBox(),
         decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
         cardNumberHint: 'Enter your Card Number',
         expiryDateType: ExpiryDateType.fullYear);
@@ -79,7 +79,7 @@ void main() {
     var cardNumberBuilderCalled = false;
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) {
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) {
         cardNumberBuilderCalled = true;
         return Text(cardLastFourDigits);
       },
@@ -97,7 +97,7 @@ void main() {
     await pumpFancyCreditCardInput(
       tester,
       cardNumberInitialValue: '4111111111111234',
-      cardNumberBuilder: (brand, cardLastFourDigits) =>
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
           Text(cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       cardNumberHint: 'Enter your Card Number',
@@ -110,7 +110,7 @@ void main() {
       (tester) async {
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) =>
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
           Text(key: const ValueKey('last-four-digits'), cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       cardNumberHint: 'Enter your Card Number',
@@ -124,7 +124,7 @@ void main() {
       (tester) async {
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) =>
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
           Text(key: const ValueKey('last-four-digits'), cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
     );
@@ -141,7 +141,7 @@ void main() {
       (tester) async {
     await pumpFancyCreditCardInput(
       tester,
-      cardNumberBuilder: (brand, cardLastFourDigits) =>
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
           Text(cardLastFourDigits),
       decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
       errorBuilder: (errorMessage) => const Text('Error'),

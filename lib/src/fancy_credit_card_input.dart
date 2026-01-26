@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 typedef LabelBuilder = Widget Function(bool hasError);
-typedef CardNumberBuilder = Widget Function(CardBrand brand, String cardLastFourDigits);
+typedef CardNumberBuilder = Widget Function(CardBrand brand, String cardLastFourDigits, bool hasError);
 typedef DecorationBuilder = Decoration Function(bool hasFocus, bool hasError);
 typedef ErrorBuilder = Widget Function(String errorMessage);
 
@@ -38,6 +38,8 @@ class FancyCreditCardInput extends StatefulWidget {
     this.animationDuration,
     this.animationCurve = Curves.easeInOut,
     this.hintTextStyle,
+    this.inputTextStyle,
+    this.errorInputTextStyle,
     super.key,
   });
 
@@ -140,6 +142,12 @@ class FancyCreditCardInput extends StatefulWidget {
 
   /// Style of the hint text
   final TextStyle? hintTextStyle;
+
+  /// Style of the input text
+  final TextStyle? inputTextStyle;
+
+  /// Style of the input text when there is an error
+  final TextStyle? errorInputTextStyle;
 
   @override
   State<FancyCreditCardInput> createState() => _FancyCreditCardInputState();
@@ -258,7 +266,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
                         ? GestureDetector(
                             key: const ValueKey('collapsed'),
                             onTap: _expandCardNumberField,
-                            child: widget.cardNumberBuilder(_cardBrand, _lastFourDigits),
+                            child: widget.cardNumberBuilder(_cardBrand, _lastFourDigits, _hasError),
                           )
                         : _buildCardNumberField(key: const ValueKey('cardNumber')),
                   ),
@@ -380,6 +388,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
             });
           }
         },
+        style: _hasError ? widget.errorInputTextStyle : widget.inputTextStyle,
         decoration: InputDecoration(
           hintText: widget.cardNumberHint,
           border: InputBorder.none,
@@ -409,6 +418,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
             }
             _checkFormCompleted();
           },
+          style: _hasError ? widget.errorInputTextStyle : widget.inputTextStyle,
           decoration: InputDecoration(
             hintText: widget.expiryHint,
             counterText: '',
@@ -427,6 +437,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
           keyboardType: TextInputType.number,
           inputFormatters: [cvvMask],
           maxLength: _cardBrand == CardBrand.amex ? 4 : 3,
+          style: _hasError ? widget.errorInputTextStyle : widget.inputTextStyle,
           decoration: InputDecoration(
             hintText: widget.cvvHint,
             counterText: '',
