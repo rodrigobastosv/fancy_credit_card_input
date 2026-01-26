@@ -1,3 +1,7 @@
+## 1.0.13
+
+Add possibility to Customize text styles
+
 ## 1.0.12
 
 Fix validation for Discover cards
