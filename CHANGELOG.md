@@ -1,3 +1,7 @@
+## 1.0.14
+
+Add possibility to Customize cursor color
+
 ## 1.0.13
 
 Add possibility to Customize text styles
