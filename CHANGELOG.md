@@ -1,3 +1,7 @@
+## 1.0.15
+
+Add possibility to Customize cursor error color
+
 ## 1.0.14
 
 Add possibility to Customize cursor color

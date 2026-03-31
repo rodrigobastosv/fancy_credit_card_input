@@ -41,6 +41,7 @@ class FancyCreditCardInput extends StatefulWidget {
     this.inputTextStyle,
     this.errorInputTextStyle,
     this.cursorColor,
+    this.cursorErrorColor,
     super.key,
   });
 
@@ -152,6 +153,9 @@ class FancyCreditCardInput extends StatefulWidget {
 
   /// Color of the TextField's cursor
   final Color? cursorColor;
+
+  /// Color of the TextField's error cursor
+  final Color? cursorErrorColor;
 
   @override
   State<FancyCreditCardInput> createState() => _FancyCreditCardInputState();
@@ -399,7 +403,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
           contentPadding: const EdgeInsets.only(left: 8),
           hintStyle: widget.hintTextStyle,
         ),
-        cursorColor: widget.cursorColor,
+        cursorColor: _hasError ? widget.cursorErrorColor : widget.cursorColor,
       );
 
   Widget _buildExpiryField() => Expanded(
@@ -430,7 +434,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
             border: InputBorder.none,
             hintStyle: widget.hintTextStyle,
           ),
-          cursorColor: widget.cursorColor,
+          cursorColor: _hasError ? widget.cursorErrorColor : widget.cursorColor,
         ),
       );
 
@@ -450,7 +454,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
             border: InputBorder.none,
             hintStyle: widget.hintTextStyle,
           ),
-          cursorColor: widget.cursorColor,
+          cursorColor: _hasError ? widget.cursorErrorColor : widget.cursorColor,
           onChanged: (cvvMasked) {
             if (widget.onChangedCvv != null) {
               widget.onChangedCvv!(cvvMasked);
