@@ -157,6 +157,19 @@ class FancyCreditCardInput extends StatefulWidget {
   /// Color of the TextField's error cursor
   final Color? cursorErrorColor;
 
+  /// Formatted expiry date based on [expiryMonthInitialValue], [expiryYearInitialValue], and [expiryDateType].
+  String? get formattedExpiryDate {
+    if (expiryMonthInitialValue == null || expiryYearInitialValue == null) {
+      return null;
+    }
+
+    final formattedMonth = expiryMonthInitialValue.toString().padLeft(2, '0');
+    return switch (expiryDateType) {
+      ExpiryDateType.regular => '$formattedMonth/$expiryYearInitialValue',
+      ExpiryDateType.fullYear => '$formattedMonth/20$expiryYearInitialValue',
+    };
+  }
+
   @override
   State<FancyCreditCardInput> createState() => _FancyCreditCardInputState();
 }
@@ -193,28 +206,122 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
   @override
   void initState() {
     super.initState();
+    final initialExpiryDate = widget.formattedExpiryDate;
+    cardNumberMask = MaskTextInputFormatter(
+      mask: widget.cardNumberMask,
+      initialText: widget.cardNumberInitialValue,
+      filter: digitFilter,
+    );
+    expiryMask = MaskTextInputFormatter(
+      mask: widget.expiryDateType.value,
+      initialText: initialExpiryDate,
+      filter: digitFilter,
+    );
+    cvvMask = MaskTextInputFormatter(
+      mask: widget.cvvMask,
+      initialText: widget.cvvInitialValue,
+      filter: digitFilter,
+    );
 
-    final initialExpiryDate = widget.expiryMonthInitialValue != null && widget.expiryYearInitialValue != null
-        ? switch (widget.expiryDateType) {
-            ExpiryDateType.regular => '${widget.expiryMonthInitialValue}/${widget.expiryYearInitialValue}',
-            ExpiryDateType.fullYear => '${widget.expiryMonthInitialValue}/20${widget.expiryYearInitialValue}',
-          }
-        : null;
-    _cardNumberController = TextEditingController(text: widget.cardNumberInitialValue);
-    _expiryDateController = TextEditingController(text: initialExpiryDate);
-    _cvvController = TextEditingController(text: widget.cvvInitialValue);
-
-    cardNumberMask = MaskTextInputFormatter(mask: widget.cardNumberMask, initialText: widget.cardNumberInitialValue, filter: digitFilter);
-    expiryMask = MaskTextInputFormatter(mask: widget.expiryDateType.value, initialText: initialExpiryDate, filter: digitFilter);
-    cvvMask = MaskTextInputFormatter(mask: widget.cvvMask, initialText: widget.cvvInitialValue, filter: digitFilter);
+    _cardNumberController = TextEditingController(
+      text: cardNumberMask.getMaskedText().isNotEmpty ? cardNumberMask.getMaskedText() : widget.cardNumberInitialValue,
+    );
+    _expiryDateController = TextEditingController(
+      text: expiryMask.getMaskedText().isNotEmpty ? expiryMask.getMaskedText() : initialExpiryDate,
+    );
+    _cvvController = TextEditingController(
+      text: cvvMask.getMaskedText().isNotEmpty ? cvvMask.getMaskedText() : widget.cvvInitialValue,
+    );
 
     _cardNumberFocusNode.addListener(_cardNumberFieldLostFocusListener);
 
     if (hasCardNumberInformation(_cardNumberController.text)) {
-      setState(() {
-        _isCollapsed = true;
+      _isCollapsed = true;
+      final cardNumber = cardNumberMask.unmaskText(_cardNumberController.text);
+      _cardBrand = CardBrand.fromCardNumber(cardNumber);
+    }
+
+    if (_cardNumberController.text.isNotEmpty &&
+        _expiryDateController.text.isNotEmpty &&
+        _cvvController.text.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _checkFormCompleted();
+        }
       });
     }
+  }
+
+  @override
+  void didUpdateWidget(covariant FancyCreditCardInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    var shouldCheckForm = false;
+
+    if (widget.cardNumberInitialValue != oldWidget.cardNumberInitialValue) {
+      cardNumberMask = MaskTextInputFormatter(
+        mask: widget.cardNumberMask,
+        initialText: widget.cardNumberInitialValue,
+        filter: digitFilter,
+      );
+      _cardNumberController.text = cardNumberMask.getMaskedText().isNotEmpty
+          ? cardNumberMask.getMaskedText()
+          : (widget.cardNumberInitialValue ?? '');
+      if (hasCardNumberInformation(_cardNumberController.text)) {
+        _isCollapsed = true;
+        final cardNumber = cardNumberMask.unmaskText(_cardNumberController.text);
+        _cardBrand = CardBrand.fromCardNumber(cardNumber);
+      } else {
+        _isCollapsed = false;
+        _editCardNumber = false;
+        _cardBrand = CardBrand.unknown;
+      }
+      shouldCheckForm = true;
+    }
+
+    if (widget.formattedExpiryDate != oldWidget.formattedExpiryDate) {
+      final newExpiryDate = widget.formattedExpiryDate;
+      expiryMask = MaskTextInputFormatter(
+        mask: widget.expiryDateType.value,
+        initialText: newExpiryDate,
+        filter: digitFilter,
+      );
+      _expiryDateController.text = expiryMask.getMaskedText().isNotEmpty
+          ? expiryMask.getMaskedText()
+          : (newExpiryDate ?? '');
+      shouldCheckForm = true;
+    }
+
+    if (widget.cvvInitialValue != oldWidget.cvvInitialValue) {
+      cvvMask = MaskTextInputFormatter(
+        mask: widget.cvvMask,
+        initialText: widget.cvvInitialValue,
+        filter: digitFilter,
+      );
+      _cvvController.text = cvvMask.getMaskedText().isNotEmpty
+          ? cvvMask.getMaskedText()
+          : (widget.cvvInitialValue ?? '');
+      shouldCheckForm = true;
+    }
+
+    if (shouldCheckForm) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _checkFormCompleted();
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _cardNumberFocusNode.removeListener(_cardNumberFieldLostFocusListener);
+    _cardNumberFocusNode.dispose();
+    _expiryFocusNode.dispose();
+    _cvvFocusNode.dispose();
+    _cardNumberController.dispose();
+    _expiryDateController.dispose();
+    _cvvController.dispose();
+    super.dispose();
   }
 
   void _cardNumberFieldLostFocusListener() {
@@ -312,7 +419,9 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
     _validateFields(cardNumberMasked, expiryMasked, cvvMasked);
 
     if (widget.onFormCompleted != null) {
-      if (_cardBrand != CardBrand.unknown && expiryText.length == widget.expiryDateType.length && cvvText.length == 3) {
+      if (_cardBrand != CardBrand.unknown &&
+          expiryText.length == widget.expiryDateType.length &&
+          (cvvText.length == 3 || (_cardBrand == CardBrand.amex && cvvText.length == 4))) {
         final expiryValues = expiryMasked.split('/');
 
         widget.onFormCompleted!(

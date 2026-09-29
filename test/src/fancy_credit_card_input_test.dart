@@ -9,6 +9,9 @@ void main() {
     required CardNumberBuilder cardNumberBuilder,
     required DecorationBuilder decorationBuilder,
     String? cardNumberInitialValue,
+    int? expiryMonthInitialValue,
+    int? expiryYearInitialValue,
+    String? cvvInitialValue,
     ErrorBuilder? errorBuilder,
     String? cardNumberHint,
     ExpiryDateType? expiryDateType,
@@ -24,6 +27,9 @@ void main() {
             cardNumberBuilder: cardNumberBuilder,
             decorationBuilder: decorationBuilder,
             cardNumberInitialValue: cardNumberInitialValue,
+            expiryMonthInitialValue: expiryMonthInitialValue,
+            expiryYearInitialValue: expiryYearInitialValue,
+            cvvInitialValue: cvvInitialValue,
             errorBuilder: errorBuilder,
             cardNumberHint: cardNumberHint,
             expiryDateType: expiryDateType ?? ExpiryDateType.regular,
@@ -149,4 +155,71 @@ void main() {
     await enterCardNumber(tester, cardNumber: '41');
     expect(find.text('Error'), findsOneWidget);
   });
+
+  testWidgets(
+      'should populate initial values including cvv and set card brand and call onFormCompleted',
+      (tester) async {
+    CardBrand? capturedBrand;
+    CardData? completedCardData;
+
+    await pumpFancyCreditCardInput(
+      tester,
+      cardNumberInitialValue: '4111 1111 1111 1234',
+      expiryMonthInitialValue: 12,
+      expiryYearInitialValue: 25,
+      cvvInitialValue: '123',
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) {
+        capturedBrand = brand;
+        return Text(cardLastFourDigits);
+      },
+      decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+      onFormCompleted: (cardData) {
+        completedCardData = cardData;
+      },
+    );
+    await tester.pumpAndSettle();
+
+    expect(capturedBrand, CardBrand.visa);
+    expect(find.byType(TextField), findsNWidgets(2)); // expiry and cvv
+    final cvvField = tester.widget<TextField>(find.byType(TextField).at(1));
+    expect(cvvField.controller?.text, '123');
+    expect(completedCardData?.cvv, '123');
+  });
+
+  testWidgets(
+      'should update cvv and trigger onFormCompleted when cvvInitialValue is updated via widget update',
+      (tester) async {
+    CardData? completedCardData;
+
+    Widget buildWidget(String? cvv) => MaterialApp(
+          home: Scaffold(
+            body: FancyCreditCardInput(
+              cardNumberInitialValue: '4111 1111 1111 1234',
+              expiryMonthInitialValue: 12,
+              expiryYearInitialValue: 25,
+              cvvInitialValue: cvv,
+              cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
+                  Text(cardLastFourDigits),
+              decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+              onFormCompleted: (cardData) {
+                completedCardData = cardData;
+              },
+            ),
+          ),
+        );
+
+    await tester.pumpWidget(buildWidget(null));
+    await tester.pumpAndSettle();
+
+    expect(completedCardData, isNull);
+
+    // Update with CVV in edit context
+    await tester.pumpWidget(buildWidget('456'));
+    await tester.pumpAndSettle();
+
+    final cvvField = tester.widget<TextField>(find.byType(TextField).at(1));
+    expect(cvvField.controller?.text, '456');
+    expect(completedCardData?.cvv, '456');
+  });
 }
+
