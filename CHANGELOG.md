@@ -1,3 +1,7 @@
+## 1.1.0
+
+Add FancySavedCreditCardInput component for saved card editing flow
+
 ## 1.0.15
 
 Add possibility to Customize cursor error color
