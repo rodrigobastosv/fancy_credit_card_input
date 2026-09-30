@@ -3,11 +3,6 @@ import 'package:fancy_credit_card_input/src/utils/mask_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-typedef LabelBuilder = Widget Function(bool hasError);
-typedef CardNumberBuilder = Widget Function(CardBrand brand, String cardLastFourDigits, bool hasError);
-typedef DecorationBuilder = Decoration Function(bool hasFocus, bool hasError);
-typedef ErrorBuilder = Widget Function(String errorMessage);
-
 class FancyCreditCardInput extends StatefulWidget {
   const FancyCreditCardInput({
     required this.cardNumberBuilder,
@@ -108,9 +103,9 @@ class FancyCreditCardInput extends StatefulWidget {
   /// The mask of the credit card number field
   final String cardNumberMask;
 
-  /// List with the suported lengths of the cards.
+  /// List with the supported lengths of the cards.
   ///
-  /// Defaults to [16, 19] as it's the most commom values nowadays.
+  /// Defaults to [16, 19] as it's the most common values nowadays.
   final List<int> supportedCardLengths;
 
   /// Type of the expiry date
