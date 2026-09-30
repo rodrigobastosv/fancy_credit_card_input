@@ -18,6 +18,9 @@ void main() {
     String? Function(String?)? cardNumberValidator,
     String? Function(String?)? expiryValidator,
     String? Function(String?)? cvvValidator,
+    bool cardNumberEnabled = true,
+    bool expiryEnabled = true,
+    bool cvvEnabled = true,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -36,6 +39,9 @@ void main() {
             cardNumberValidator: cardNumberValidator,
             expiryValidator: expiryValidator,
             cvvValidator: cvvValidator,
+            cardNumberEnabled: cardNumberEnabled,
+            expiryEnabled: expiryEnabled,
+            cvvEnabled: cvvEnabled,
           ),
         ),
       ),
@@ -220,6 +226,65 @@ void main() {
     final cvvField = tester.widget<TextField>(find.byType(TextField).at(1));
     expect(cvvField.controller?.text, '456');
     expect(completedCardData?.cvv, '456');
+  });
+
+  testWidgets('should respect cardNumberEnabled when false', (tester) async {
+    await pumpFancyCreditCardInput(
+      tester,
+      cardNumberEnabled: false,
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
+          Text(cardLastFourDigits),
+      decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+    );
+
+    final cardField = tester.widget<TextField>(find.byType(TextField));
+    expect(cardField.enabled, isFalse);
+  });
+
+  testWidgets(
+      'should not expand card number when collapsed and cardNumberEnabled is false',
+      (tester) async {
+    await pumpFancyCreditCardInput(
+      tester,
+      cardNumberInitialValue: '4111 1111 1111 1234',
+      cardNumberEnabled: false,
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
+          Text(cardLastFourDigits),
+      decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+    );
+
+    await tester.pumpAndSettle();
+    final lastFourDigits = find.text('1234');
+    expect(lastFourDigits, findsOneWidget);
+
+    await tester.tap(lastFourDigits);
+    await tester.pumpAndSettle();
+
+    // Still collapsed: lastFourDigits remains visible and full card number field is not shown
+    expect(find.text('1234'), findsOneWidget);
+    expect(find.text('4111 1111 1111 1234'), findsNothing);
+  });
+
+  testWidgets('should respect expiryEnabled and cvvEnabled when false',
+      (tester) async {
+    await pumpFancyCreditCardInput(
+      tester,
+      cardNumberInitialValue: '4111 1111 1111 1234',
+      expiryEnabled: false,
+      cvvEnabled: false,
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
+          Text(cardLastFourDigits),
+      decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsNWidgets(2)); // expiry and cvv
+
+    final expiryField = tester.widget<TextField>(find.byType(TextField).at(0));
+    final cvvField = tester.widget<TextField>(find.byType(TextField).at(1));
+
+    expect(expiryField.enabled, isFalse);
+    expect(cvvField.enabled, isFalse);
   });
 }
 

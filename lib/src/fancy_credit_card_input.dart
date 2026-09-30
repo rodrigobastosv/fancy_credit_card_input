@@ -42,6 +42,9 @@ class FancyCreditCardInput extends StatefulWidget {
     this.errorInputTextStyle,
     this.cursorColor,
     this.cursorErrorColor,
+    this.cardNumberEnabled = true,
+    this.expiryEnabled = true,
+    this.cvvEnabled = true,
     super.key,
   });
 
@@ -156,6 +159,15 @@ class FancyCreditCardInput extends StatefulWidget {
 
   /// Color of the TextField's error cursor
   final Color? cursorErrorColor;
+
+  /// Whether the card number field is enabled
+  final bool cardNumberEnabled;
+
+  /// Whether the expiry date field is enabled
+  final bool expiryEnabled;
+
+  /// Whether the CVV field is enabled
+  final bool cvvEnabled;
 
   /// Formatted expiry date based on [expiryMonthInitialValue], [expiryYearInitialValue], and [expiryDateType].
   String? get formattedExpiryDate {
@@ -380,8 +392,11 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
                     child: _isCollapsed
                         ? GestureDetector(
                             key: const ValueKey('collapsed'),
-                            onTap: _expandCardNumberField,
-                            child: widget.cardNumberBuilder(_cardBrand, _lastFourDigits, _hasError),
+                            onTap: widget.cardNumberEnabled ? _expandCardNumberField : null,
+                            child: Opacity(
+                              opacity: widget.cardNumberEnabled ? 1 : 0.5,
+                              child: widget.cardNumberBuilder(_cardBrand, _lastFourDigits, _hasError)
+                            ),
                           )
                         : _buildCardNumberField(key: const ValueKey('cardNumber')),
                   ),
@@ -477,6 +492,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
 
   Widget _buildCardNumberField({Key? key}) => TextField(
         key: key,
+        enabled: widget.cardNumberEnabled,
         controller: _cardNumberController,
         focusNode: _cardNumberFocusNode,
         keyboardType: TextInputType.number,
@@ -518,6 +534,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
   Widget _buildExpiryField() => Expanded(
         flex: widget.expiryFlex ?? 3,
         child: TextField(
+          enabled: widget.expiryEnabled,
           controller: _expiryDateController,
           focusNode: _expiryFocusNode,
           keyboardType: TextInputType.datetime,
@@ -550,6 +567,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
   Widget _buildCVVField() => Expanded(
         flex: widget.cvvFlex ?? 2,
         child: TextField(
+          enabled: widget.cvvEnabled,
           controller: _cvvController,
           focusNode: _cvvFocusNode,
           obscureText: true,
