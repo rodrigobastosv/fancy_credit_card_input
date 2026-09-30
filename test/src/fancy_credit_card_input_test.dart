@@ -9,12 +9,18 @@ void main() {
     required CardNumberBuilder cardNumberBuilder,
     required DecorationBuilder decorationBuilder,
     String? cardNumberInitialValue,
+    int? expiryMonthInitialValue,
+    int? expiryYearInitialValue,
+    String? cvvInitialValue,
     ErrorBuilder? errorBuilder,
     String? cardNumberHint,
     ExpiryDateType? expiryDateType,
     String? Function(String?)? cardNumberValidator,
     String? Function(String?)? expiryValidator,
     String? Function(String?)? cvvValidator,
+    bool cardNumberEnabled = true,
+    bool expiryEnabled = true,
+    bool cvvEnabled = true,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -24,12 +30,18 @@ void main() {
             cardNumberBuilder: cardNumberBuilder,
             decorationBuilder: decorationBuilder,
             cardNumberInitialValue: cardNumberInitialValue,
+            expiryMonthInitialValue: expiryMonthInitialValue,
+            expiryYearInitialValue: expiryYearInitialValue,
+            cvvInitialValue: cvvInitialValue,
             errorBuilder: errorBuilder,
             cardNumberHint: cardNumberHint,
             expiryDateType: expiryDateType ?? ExpiryDateType.regular,
             cardNumberValidator: cardNumberValidator,
             expiryValidator: expiryValidator,
             cvvValidator: cvvValidator,
+            cardNumberEnabled: cardNumberEnabled,
+            expiryEnabled: expiryEnabled,
+            cvvEnabled: cvvEnabled,
           ),
         ),
       ),
@@ -149,4 +161,130 @@ void main() {
     await enterCardNumber(tester, cardNumber: '41');
     expect(find.text('Error'), findsOneWidget);
   });
+
+  testWidgets(
+      'should populate initial values including cvv and set card brand and call onFormCompleted',
+      (tester) async {
+    CardBrand? capturedBrand;
+    CardData? completedCardData;
+
+    await pumpFancyCreditCardInput(
+      tester,
+      cardNumberInitialValue: '4111 1111 1111 1234',
+      expiryMonthInitialValue: 12,
+      expiryYearInitialValue: 25,
+      cvvInitialValue: '123',
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) {
+        capturedBrand = brand;
+        return Text(cardLastFourDigits);
+      },
+      decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+      onFormCompleted: (cardData) {
+        completedCardData = cardData;
+      },
+    );
+    await tester.pumpAndSettle();
+
+    expect(capturedBrand, CardBrand.visa);
+    expect(find.byType(TextField), findsNWidgets(2)); // expiry and cvv
+    final cvvField = tester.widget<TextField>(find.byType(TextField).at(1));
+    expect(cvvField.controller?.text, '123');
+    expect(completedCardData?.cvv, '123');
+  });
+
+  testWidgets(
+      'should update cvv and trigger onFormCompleted when cvvInitialValue is updated via widget update',
+      (tester) async {
+    CardData? completedCardData;
+
+    Widget buildWidget(String? cvv) => MaterialApp(
+          home: Scaffold(
+            body: FancyCreditCardInput(
+              cardNumberInitialValue: '4111 1111 1111 1234',
+              expiryMonthInitialValue: 12,
+              expiryYearInitialValue: 25,
+              cvvInitialValue: cvv,
+              cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
+                  Text(cardLastFourDigits),
+              decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+              onFormCompleted: (cardData) {
+                completedCardData = cardData;
+              },
+            ),
+          ),
+        );
+
+    await tester.pumpWidget(buildWidget(null));
+    await tester.pumpAndSettle();
+
+    expect(completedCardData, isNull);
+
+    // Update with CVV in edit context
+    await tester.pumpWidget(buildWidget('456'));
+    await tester.pumpAndSettle();
+
+    final cvvField = tester.widget<TextField>(find.byType(TextField).at(1));
+    expect(cvvField.controller?.text, '456');
+    expect(completedCardData?.cvv, '456');
+  });
+
+  testWidgets('should respect cardNumberEnabled when false', (tester) async {
+    await pumpFancyCreditCardInput(
+      tester,
+      cardNumberEnabled: false,
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
+          Text(cardLastFourDigits),
+      decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+    );
+
+    final cardField = tester.widget<TextField>(find.byType(TextField));
+    expect(cardField.enabled, isFalse);
+  });
+
+  testWidgets(
+      'should not expand card number when collapsed and cardNumberEnabled is false',
+      (tester) async {
+    await pumpFancyCreditCardInput(
+      tester,
+      cardNumberInitialValue: '4111 1111 1111 1234',
+      cardNumberEnabled: false,
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
+          Text(cardLastFourDigits),
+      decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+    );
+
+    await tester.pumpAndSettle();
+    final lastFourDigits = find.text('1234');
+    expect(lastFourDigits, findsOneWidget);
+
+    await tester.tap(lastFourDigits);
+    await tester.pumpAndSettle();
+
+    // Still collapsed: lastFourDigits remains visible and full card number field is not shown
+    expect(find.text('1234'), findsOneWidget);
+    expect(find.text('4111 1111 1111 1234'), findsNothing);
+  });
+
+  testWidgets('should respect expiryEnabled and cvvEnabled when false',
+      (tester) async {
+    await pumpFancyCreditCardInput(
+      tester,
+      cardNumberInitialValue: '4111 1111 1111 1234',
+      expiryEnabled: false,
+      cvvEnabled: false,
+      cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
+          Text(cardLastFourDigits),
+      decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+    );
+
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsNWidgets(2)); // expiry and cvv
+
+    final expiryField = tester.widget<TextField>(find.byType(TextField).at(0));
+    final cvvField = tester.widget<TextField>(find.byType(TextField).at(1));
+
+    expect(expiryField.enabled, isFalse);
+    expect(cvvField.enabled, isFalse);
+  });
 }
+
