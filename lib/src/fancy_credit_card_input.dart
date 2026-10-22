@@ -30,6 +30,7 @@ class FancyCreditCardInput extends StatefulWidget {
     this.cardNumberValidator,
     this.expiryValidator,
     this.cvvValidator,
+    this.forceErrorText,
     this.animationDuration,
     this.animationCurve = Curves.easeInOut,
     this.hintTextStyle,
@@ -134,6 +135,14 @@ class FancyCreditCardInput extends StatefulWidget {
   /// Validator to validate the CVV input
   final String? Function(String?)? cvvValidator;
 
+  /// An optional error text that forces the field into an error state with this text.
+  ///
+  /// If this is non-null, the field will be in an error state with this text,
+  /// regardless of any validator.
+  ///
+  /// If this is null, the field will validate normally using the validators.
+  final String? forceErrorText;
+
   /// Duration of the animations
   final Duration? animationDuration;
 
@@ -213,6 +222,7 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
   @override
   void initState() {
     super.initState();
+    _errorMessage = widget.forceErrorText;
     final initialExpiryDate = widget.formattedExpiryDate;
     cardNumberMask = MaskTextInputFormatter(
       mask: widget.cardNumberMask,
@@ -263,6 +273,10 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
   void didUpdateWidget(covariant FancyCreditCardInput oldWidget) {
     super.didUpdateWidget(oldWidget);
     var shouldCheckForm = false;
+
+    if (widget.forceErrorText != oldWidget.forceErrorText) {
+      _errorMessage = widget.forceErrorText;
+    }
 
     if (widget.cardNumberInitialValue != oldWidget.cardNumberInitialValue) {
       cardNumberMask = MaskTextInputFormatter(
@@ -451,6 +465,11 @@ class _FancyCreditCardInputState extends State<FancyCreditCardInput> {
   }
 
   void _validateFields(String cardNumberMasked, String expiryMasked, String cvvMasked) {
+    if (widget.forceErrorText != null) {
+      _errorMessage = widget.forceErrorText;
+      setState(() {});
+      return;
+    }
     final cardError = widget.cardNumberValidator?.call(cardNumberMasked);
     final expiryError = widget.expiryValidator?.call(expiryMasked);
     final cvvError = widget.cvvValidator?.call(cvvMasked);

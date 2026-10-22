@@ -30,6 +30,7 @@ class FancySavedCreditCardInput extends StatefulWidget {
     this.cvvHint,
     this.expiryValidator,
     this.cvvValidator,
+    this.forceErrorText,
     this.animationDuration,
     this.animationCurve = Curves.easeInOut,
     this.hintTextStyle,
@@ -104,6 +105,14 @@ class FancySavedCreditCardInput extends StatefulWidget {
 
   /// Validator for the CVV input.
   final String? Function(String?)? cvvValidator;
+
+  /// An optional error text that forces the field into an error state with this text.
+  ///
+  /// If this is non-null, the field will be in an error state with this text,
+  /// regardless of any validator.
+  ///
+  /// If this is null, the field will validate normally using the validators.
+  final String? forceErrorText;
 
   /// Duration for decoration animations.
   final Duration? animationDuration;
@@ -182,6 +191,7 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
   @override
   void initState() {
     super.initState();
+    _errorMessage = widget.forceErrorText;
     _expiryFocusNode = FocusNode();
     _cvvFocusNode = FocusNode();
 
@@ -224,6 +234,10 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
   void didUpdateWidget(covariant FancySavedCreditCardInput oldWidget) {
     super.didUpdateWidget(oldWidget);
     var shouldCheckForm = false;
+
+    if (widget.forceErrorText != oldWidget.forceErrorText) {
+      _errorMessage = widget.forceErrorText;
+    }
 
     if (widget.formattedExpiryDate != oldWidget.formattedExpiryDate) {
       final newExpiryDate = widget.formattedExpiryDate;
@@ -305,6 +319,11 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
   }
 
   void _validateFields(String expiryMasked, String cvvMasked) {
+    if (widget.forceErrorText != null) {
+      _errorMessage = widget.forceErrorText;
+      setState(() {});
+      return;
+    }
     final expiryError = widget.expiryValidator?.call(expiryMasked);
     final cvvError = widget.cvvValidator?.call(cvvMasked);
     _errorMessage = expiryError ?? cvvError;
@@ -337,6 +356,7 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
           if (widget.errorBuilder != null)
             Visibility(
               visible: _hasError,
+              maintainSize: true,
               maintainAnimation: true,
               maintainState: true,
               child: widget.errorBuilder!(_errorMessage ?? ''),
