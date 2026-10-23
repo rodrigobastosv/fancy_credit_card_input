@@ -19,6 +19,12 @@ void main() {
     ExpiryDateType? expiryDateType,
     String? Function(String?)? expiryValidator,
     String? Function(String?)? cvvValidator,
+    String? forceErrorText,
+    LabelBuilder? labelBuilder,
+    TextStyle? inputTextStyle,
+    TextStyle? errorInputTextStyle,
+    Color? cursorColor,
+    Color? cursorErrorColor,
     bool expiryEnabled = true,
     bool cvvEnabled = true,
   }) async {
@@ -40,6 +46,12 @@ void main() {
             expiryDateType: expiryDateType ?? ExpiryDateType.regular,
             expiryValidator: expiryValidator,
             cvvValidator: cvvValidator,
+            forceErrorText: forceErrorText,
+            labelBuilder: labelBuilder,
+            inputTextStyle: inputTextStyle,
+            errorInputTextStyle: errorInputTextStyle,
+            cursorColor: cursorColor,
+            cursorErrorColor: cursorErrorColor,
             expiryEnabled: expiryEnabled,
             cvvEnabled: cvvEnabled,
           ),
@@ -165,5 +177,120 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Error: Invalid date'), findsOneWidget);
+  });
+
+  group('forceErrorText', () {
+    testWidgets('should display forced error and apply error styles when provided', (tester) async {
+      bool? capturedHasErrorDecoration;
+      bool? capturedHasErrorLabel;
+      bool? capturedHasErrorCardNumber;
+
+      const regularStyle = TextStyle(color: Colors.black);
+      const errorStyle = TextStyle(color: Colors.red);
+      const regularCursor = Colors.blue;
+      const errorCursor = Colors.red;
+
+      await pumpFancySavedCreditCardInput(
+        tester,
+        cardBrand: CardBrand.visa,
+        cardNumber: '•••• 1234',
+        forceErrorText: 'Saved card expired',
+        errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+        decorationBuilder: (hasFocus, hasError) {
+          capturedHasErrorDecoration = hasError;
+          return const BoxDecoration();
+        },
+        labelBuilder: (hasError) {
+          capturedHasErrorLabel = hasError;
+          return const Text('Card Info');
+        },
+        cardNumberBuilder: (brand, cardLastFourDigits, hasError) {
+          capturedHasErrorCardNumber = hasError;
+          return Text(cardLastFourDigits);
+        },
+        inputTextStyle: regularStyle,
+        errorInputTextStyle: errorStyle,
+        cursorColor: regularCursor,
+        cursorErrorColor: errorCursor,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Error: Saved card expired'), findsOneWidget);
+      expect(capturedHasErrorDecoration, isTrue);
+      expect(capturedHasErrorLabel, isTrue);
+      expect(capturedHasErrorCardNumber, isTrue);
+
+      final textFields = tester.widgetList<TextField>(find.byType(TextField)).toList();
+      for (final field in textFields) {
+        expect(field.style, equals(errorStyle));
+        expect(field.cursorColor, equals(errorCursor));
+      }
+    });
+
+    testWidgets('should override validators when forceErrorText is provided', (tester) async {
+      var validatorCalled = false;
+
+      await pumpFancySavedCreditCardInput(
+        tester,
+        cardBrand: CardBrand.visa,
+        cardNumber: '•••• 1234',
+        expiryMonthInitialValue: 12,
+        expiryYearInitialValue: 26,
+        cvvInitialValue: '123',
+        forceErrorText: 'Forced external error',
+        expiryValidator: (_) {
+          validatorCalled = true;
+          return 'Expiry error';
+        },
+        cvvValidator: (_) {
+          validatorCalled = true;
+          return 'CVV error';
+        },
+        errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+        cardNumberBuilder: (brand, cardLastFourDigits, hasError) => Text(cardLastFourDigits),
+        decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Error: Forced external error'), findsOneWidget);
+      expect(validatorCalled, isFalse);
+    });
+
+    testWidgets('should dynamically update when forceErrorText changes', (tester) async {
+      Widget buildWidget(String? forceErrorText) => MaterialApp(
+            home: Scaffold(
+              body: FancySavedCreditCardInput(
+                cardBrand: CardBrand.visa,
+                cardNumber: '•••• 1234',
+                forceErrorText: forceErrorText,
+                errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+                cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
+                    Text(cardLastFourDigits),
+                decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+              ),
+            ),
+          );
+
+      await tester.pumpWidget(buildWidget(null));
+      await tester.pumpAndSettle();
+
+      final initialVisibility = tester.widget<Visibility>(find.byType(Visibility));
+      expect(initialVisibility.visible, isFalse);
+
+      // Update to have forced error
+      await tester.pumpWidget(buildWidget('CVV incorrect'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Error: CVV incorrect'), findsOneWidget);
+      final errorVisibility = tester.widget<Visibility>(find.byType(Visibility));
+      expect(errorVisibility.visible, isTrue);
+
+      // Clear forced error
+      await tester.pumpWidget(buildWidget(null));
+      await tester.pumpAndSettle();
+
+      final clearedVisibility = tester.widget<Visibility>(find.byType(Visibility));
+      expect(clearedVisibility.visible, isFalse);
+    });
   });
 }

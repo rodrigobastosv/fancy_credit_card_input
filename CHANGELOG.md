@@ -1,3 +1,7 @@
+## 1.1.1
+
+Add support to forceErrorText property
+
 ## 1.1.0
 
 Add FancySavedCreditCardInput component for saved card editing flow

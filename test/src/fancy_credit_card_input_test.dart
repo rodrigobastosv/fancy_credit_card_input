@@ -18,6 +18,12 @@ void main() {
     String? Function(String?)? cardNumberValidator,
     String? Function(String?)? expiryValidator,
     String? Function(String?)? cvvValidator,
+    String? forceErrorText,
+    LabelBuilder? labelBuilder,
+    TextStyle? inputTextStyle,
+    TextStyle? errorInputTextStyle,
+    Color? cursorColor,
+    Color? cursorErrorColor,
     bool cardNumberEnabled = true,
     bool expiryEnabled = true,
     bool cvvEnabled = true,
@@ -39,6 +45,12 @@ void main() {
             cardNumberValidator: cardNumberValidator,
             expiryValidator: expiryValidator,
             cvvValidator: cvvValidator,
+            forceErrorText: forceErrorText,
+            labelBuilder: labelBuilder,
+            inputTextStyle: inputTextStyle,
+            errorInputTextStyle: errorInputTextStyle,
+            cursorColor: cursorColor,
+            cursorErrorColor: cursorErrorColor,
             cardNumberEnabled: cardNumberEnabled,
             expiryEnabled: expiryEnabled,
             cvvEnabled: cvvEnabled,
@@ -104,7 +116,7 @@ void main() {
   });
 
   testWidgets(
-      'should start colapsed when theres an initial value for the card number',
+      'should start collapsed when theres an initial value for the card number',
       (tester) async {
     await pumpFancyCreditCardInput(
       tester,
@@ -132,7 +144,7 @@ void main() {
   });
 
   testWidgets(
-      'should expand the card number again after being clicked while being colapsed',
+      'should expand the card number again after being clicked while being collapsed',
       (tester) async {
     await pumpFancyCreditCardInput(
       tester,
@@ -285,6 +297,121 @@ void main() {
 
     expect(expiryField.enabled, isFalse);
     expect(cvvField.enabled, isFalse);
+  });
+
+  group('forceErrorText', () {
+    testWidgets('should display forced error and apply error styles when provided', (tester) async {
+      bool? capturedHasErrorDecoration;
+      bool? capturedHasErrorLabel;
+      bool? capturedHasErrorCardNumber;
+
+      const regularStyle = TextStyle(color: Colors.black);
+      const errorStyle = TextStyle(color: Colors.red);
+      const regularCursor = Colors.blue;
+      const errorCursor = Colors.red;
+
+      await pumpFancyCreditCardInput(
+        tester,
+        forceErrorText: 'Card was declined',
+        errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+        decorationBuilder: (hasFocus, hasError) {
+          capturedHasErrorDecoration = hasError;
+          return const BoxDecoration();
+        },
+        labelBuilder: (hasError) {
+          capturedHasErrorLabel = hasError;
+          return const Text('Card Info');
+        },
+        cardNumberBuilder: (brand, cardLastFourDigits, hasError) {
+          capturedHasErrorCardNumber = hasError;
+          return Text(cardLastFourDigits);
+        },
+        cardNumberInitialValue: '4111 1111 1111 1234',
+        inputTextStyle: regularStyle,
+        errorInputTextStyle: errorStyle,
+        cursorColor: regularCursor,
+        cursorErrorColor: errorCursor,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Error: Card was declined'), findsOneWidget);
+      expect(capturedHasErrorDecoration, isTrue);
+      expect(capturedHasErrorLabel, isTrue);
+      expect(capturedHasErrorCardNumber, isTrue);
+
+      final textFields = tester.widgetList<TextField>(find.byType(TextField)).toList();
+      for (final field in textFields) {
+        expect(field.style, equals(errorStyle));
+        expect(field.cursorColor, equals(errorCursor));
+      }
+    });
+
+    testWidgets('should override validators when forceErrorText is provided', (tester) async {
+      var validatorCalled = false;
+
+      await pumpFancyCreditCardInput(
+        tester,
+        cardNumberInitialValue: '4111 1111 1111 1234',
+        expiryMonthInitialValue: 12,
+        expiryYearInitialValue: 26,
+        cvvInitialValue: '123',
+        forceErrorText: 'Forced external error',
+        cardNumberValidator: (_) {
+          validatorCalled = true;
+          return 'Card number error';
+        },
+        expiryValidator: (_) {
+          validatorCalled = true;
+          return 'Expiry error';
+        },
+        cvvValidator: (_) {
+          validatorCalled = true;
+          return 'CVV error';
+        },
+        errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+        cardNumberBuilder: (brand, cardLastFourDigits, hasError) => Text(cardLastFourDigits),
+        decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Error: Forced external error'), findsOneWidget);
+      expect(validatorCalled, isFalse);
+    });
+
+    testWidgets('should dynamically update when forceErrorText changes', (tester) async {
+      Widget buildWidget(String? forceErrorText) => MaterialApp(
+            home: Scaffold(
+              body: FancyCreditCardInput(
+                forceErrorText: forceErrorText,
+                errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+                cardNumberBuilder: (brand, cardLastFourDigits, hasError) =>
+                    Text(cardLastFourDigits),
+                decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+              ),
+            ),
+          );
+
+      await tester.pumpWidget(buildWidget(null));
+      await tester.pumpAndSettle();
+
+      final initialVisibility = tester.widget<Visibility>(find.byType(Visibility));
+      expect(initialVisibility.visible, isFalse);
+
+      // Update to have forced error
+      await tester.pumpWidget(buildWidget('Something went wrong'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Error: Something went wrong'), findsOneWidget);
+      final errorVisibility = tester.widget<Visibility>(find.byType(Visibility));
+      expect(errorVisibility.visible, isTrue);
+
+      // Clear forced error
+      await tester.pumpWidget(buildWidget(null));
+      await tester.pumpAndSettle();
+
+      final clearedVisibility = tester.widget<Visibility>(find.byType(Visibility));
+      expect(clearedVisibility.visible, isFalse);
+    });
   });
 }
 
