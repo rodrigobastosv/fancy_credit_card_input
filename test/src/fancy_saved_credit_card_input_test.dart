@@ -19,6 +19,7 @@ void main() {
     ExpiryDateType? expiryDateType,
     String? Function(String?)? expiryValidator,
     String? Function(String?)? cvvValidator,
+    ValidationMode validationMode = ValidationMode.always,
     String? forceErrorText,
     LabelBuilder? labelBuilder,
     TextStyle? inputTextStyle,
@@ -46,6 +47,7 @@ void main() {
             expiryDateType: expiryDateType ?? ExpiryDateType.regular,
             expiryValidator: expiryValidator,
             cvvValidator: cvvValidator,
+            validationMode: validationMode,
             forceErrorText: forceErrorText,
             labelBuilder: labelBuilder,
             inputTextStyle: inputTextStyle,
@@ -292,5 +294,160 @@ void main() {
       final clearedVisibility = tester.widget<Visibility>(find.byType(Visibility));
       expect(clearedVisibility.visible, isFalse);
     });
+  });
+
+  group('validationMode', () {
+    testWidgets('should validate on every change when ValidationMode.always', (tester) async {
+      await pumpFancySavedCreditCardInput(
+        tester,
+        cardBrand: CardBrand.visa,
+        cardNumber: '•••• 1234',
+        validationMode: ValidationMode.always,
+        expiryValidator: (value) => (value == null || value.length < 5) ? 'Invalid expiry' : null,
+        errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+        cardNumberBuilder: (brand, cardLastFourDigits, hasError) => Text(cardLastFourDigits),
+        decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+      );
+
+      final expiryField = find.byType(TextField).at(0);
+      await tester.enterText(expiryField, '1');
+      await tester.pump();
+
+      expect(tester.widget<Visibility>(find.byType(Visibility)).visible, isTrue);
+      expect(find.text('Error: Invalid expiry'), findsOneWidget);
+    });
+
+    testWidgets('should not validate expiry while focused when ValidationMode.onUnfocus', (tester) async {
+      await pumpFancySavedCreditCardInput(
+        tester,
+        cardBrand: CardBrand.visa,
+        cardNumber: '•••• 1234',
+        validationMode: ValidationMode.onUnfocus,
+        expiryValidator: (value) => (value == null || value.length < 5) ? 'Invalid expiry' : null,
+        errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+        cardNumberBuilder: (brand, cardLastFourDigits, hasError) => Text(cardLastFourDigits),
+        decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+      );
+
+      final expiryField = find.byType(TextField).at(0);
+      await tester.enterText(expiryField, '1');
+      await tester.pump();
+      expect(tester.widget<Visibility>(find.byType(Visibility)).visible, isFalse);
+    });
+
+    testWidgets(
+      'should validate expiry only when it loses focus and hide error when edited in ValidationMode.onUnfocus',
+      (tester) async {
+        var cvvValidatorCalled = false;
+
+        await pumpFancySavedCreditCardInput(
+          tester,
+          cardBrand: CardBrand.visa,
+          cardNumber: '•••• 1234',
+          validationMode: ValidationMode.onUnfocus,
+          expiryValidator: (value) => (value == null || value.length < 5) ? 'Invalid expiry' : null,
+          cvvValidator: (value) {
+            cvvValidatorCalled = true;
+            return 'Invalid CVV';
+          },
+          errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+          cardNumberBuilder: (brand, cardLastFourDigits, hasError) => Text(cardLastFourDigits),
+          decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+        );
+
+        final expiryField = find.byType(TextField).at(0);
+        await tester.enterText(expiryField, '1');
+        await tester.pump();
+
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+        expect(tester.widget<Visibility>(find.byType(Visibility)).visible, isTrue);
+        expect(find.text('Error: Invalid expiry'), findsOneWidget);
+        expect(cvvValidatorCalled, isFalse);
+
+        await tester.enterText(expiryField, '12');
+        await tester.pump();
+        expect(tester.widget<Visibility>(find.byType(Visibility)).visible, isFalse);
+      },
+    );
+
+    testWidgets(
+      'should clear expiry error and not validate cvv when expiry completes and moves focus to cvv in ValidationMode.onUnfocus',
+      (tester) async {
+        await pumpFancySavedCreditCardInput(
+          tester,
+          cardBrand: CardBrand.visa,
+          cardNumber: '•••• 1234',
+          validationMode: ValidationMode.onUnfocus,
+          expiryValidator: (value) => (value == null || value.length < 5) ? 'Invalid expiry' : null,
+          cvvValidator: (value) => (value == null || value.length < 3) ? 'Invalid CVV' : null,
+          errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+          cardNumberBuilder: (brand, cardLastFourDigits, hasError) => Text(cardLastFourDigits),
+          decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+        );
+
+        final expiryField = find.byType(TextField).at(0);
+        await tester.enterText(expiryField, '1');
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+        expect(tester.widget<Visibility>(find.byType(Visibility)).visible, isTrue);
+
+        await tester.enterText(expiryField, '1226');
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pumpAndSettle();
+        expect(tester.widget<Visibility>(find.byType(Visibility)).visible, isFalse);
+      },
+    );
+
+    testWidgets('should not validate cvv while focused when ValidationMode.onUnfocus', (tester) async {
+      await pumpFancySavedCreditCardInput(
+        tester,
+        cardBrand: CardBrand.visa,
+        cardNumber: '•••• 1234',
+        expiryMonthInitialValue: 12,
+        expiryYearInitialValue: 26,
+        validationMode: ValidationMode.onUnfocus,
+        cvvValidator: (value) => (value == null || value.length < 3) ? 'Invalid CVV' : null,
+        errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+        cardNumberBuilder: (brand, cardLastFourDigits, hasError) => Text(cardLastFourDigits),
+        decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+      );
+
+      final cvvField = find.byType(TextField).at(1);
+      await tester.enterText(cvvField, '1');
+      await tester.pump();
+      expect(tester.widget<Visibility>(find.byType(Visibility)).visible, isFalse);
+    });
+
+    testWidgets(
+      'should validate cvv when it loses focus and hide error when edited in ValidationMode.onUnfocus',
+      (tester) async {
+        await pumpFancySavedCreditCardInput(
+          tester,
+          cardBrand: CardBrand.visa,
+          cardNumber: '•••• 1234',
+          expiryMonthInitialValue: 12,
+          expiryYearInitialValue: 26,
+          validationMode: ValidationMode.onUnfocus,
+          cvvValidator: (value) => (value == null || value.length < 3) ? 'Invalid CVV' : null,
+          errorBuilder: (errorMessage) => Text('Error: $errorMessage'),
+          cardNumberBuilder: (brand, cardLastFourDigits, hasError) => Text(cardLastFourDigits),
+          decorationBuilder: (hasFocus, hasError) => const BoxDecoration(),
+        );
+
+        final cvvField = find.byType(TextField).at(1);
+        await tester.enterText(cvvField, '1');
+        await tester.pump();
+
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pumpAndSettle();
+        expect(tester.widget<Visibility>(find.byType(Visibility)).visible, isTrue);
+        expect(find.text('Error: Invalid CVV'), findsOneWidget);
+
+        await tester.enterText(cvvField, '12');
+        await tester.pump();
+        expect(tester.widget<Visibility>(find.byType(Visibility)).visible, isFalse);
+      },
+    );
   });
 }

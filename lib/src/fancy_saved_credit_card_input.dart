@@ -30,6 +30,7 @@ class FancySavedCreditCardInput extends StatefulWidget {
     this.cvvHint,
     this.expiryValidator,
     this.cvvValidator,
+    this.validationMode = ValidationMode.always,
     this.forceErrorText,
     this.animationDuration,
     this.animationCurve = Curves.easeInOut,
@@ -106,6 +107,11 @@ class FancySavedCreditCardInput extends StatefulWidget {
   /// Validator for the CVV input.
   final String? Function(String?)? cvvValidator;
 
+  /// Controls when the text fields are validated.
+  ///
+  /// Defaults to [ValidationMode.always].
+  final ValidationMode validationMode;
+
   /// An optional error text that forces the field into an error state with this text.
   ///
   /// If this is non-null, the field will be in an error state with this text,
@@ -170,6 +176,12 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
 
   String? _errorMessage;
 
+  bool _wasExpiryFocused = false;
+  bool _wasCvvFocused = false;
+
+  bool _hasExpiryUnfocused = false;
+  bool _hasCvvUnfocused = false;
+
   Duration get animationDuration => widget.animationDuration ?? const Duration(milliseconds: 300);
 
   String get _lastFourDigits {
@@ -195,8 +207,8 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
     _expiryFocusNode = FocusNode();
     _cvvFocusNode = FocusNode();
 
-    _expiryFocusNode.addListener(_onFocusChange);
-    _cvvFocusNode.addListener(_onFocusChange);
+    _expiryFocusNode.addListener(_onExpiryFocusChange);
+    _cvvFocusNode.addListener(_onCvvFocusChange);
 
     final initialExpiryDate = widget.formattedExpiryDate;
     expiryMask = MaskTextInputFormatter(
@@ -226,7 +238,29 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
     }
   }
 
-  void _onFocusChange() {
+  void _onExpiryFocusChange() {
+    if (_expiryFocusNode.hasFocus) {
+      _wasExpiryFocused = true;
+    } else if (_wasExpiryFocused) {
+      _wasExpiryFocused = false;
+      _hasExpiryUnfocused = true;
+      if (widget.validationMode == ValidationMode.onUnfocus) {
+        _validateFields(_expiryDateController.text, _cvvController.text);
+      }
+    }
+    setState(() {});
+  }
+
+  void _onCvvFocusChange() {
+    if (_cvvFocusNode.hasFocus) {
+      _wasCvvFocused = true;
+    } else if (_wasCvvFocused) {
+      _wasCvvFocused = false;
+      _hasCvvUnfocused = true;
+      if (widget.validationMode == ValidationMode.onUnfocus) {
+        _validateFields(_expiryDateController.text, _cvvController.text);
+      }
+    }
     setState(() {});
   }
 
@@ -266,6 +300,14 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
       shouldCheckForm = true;
     }
 
+    if (widget.validationMode != oldWidget.validationMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _validateFields(_expiryDateController.text, _cvvController.text);
+        }
+      });
+    }
+
     if (shouldCheckForm) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
@@ -277,8 +319,8 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
 
   @override
   void dispose() {
-    _expiryFocusNode.removeListener(_onFocusChange);
-    _cvvFocusNode.removeListener(_onFocusChange);
+    _expiryFocusNode.removeListener(_onExpiryFocusChange);
+    _cvvFocusNode.removeListener(_onCvvFocusChange);
     _expiryFocusNode.dispose();
     _cvvFocusNode.dispose();
     _expiryDateController.dispose();
@@ -324,8 +366,13 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
       setState(() {});
       return;
     }
-    final expiryError = widget.expiryValidator?.call(expiryMasked);
-    final cvvError = widget.cvvValidator?.call(cvvMasked);
+    final validateAll = widget.validationMode == ValidationMode.always;
+    final expiryError = (validateAll || _hasExpiryUnfocused)
+        ? widget.expiryValidator?.call(expiryMasked)
+        : null;
+    final cvvError = (validateAll || _hasCvvUnfocused)
+        ? widget.cvvValidator?.call(cvvMasked)
+        : null;
     _errorMessage = expiryError ?? cvvError;
     setState(() {});
   }
@@ -373,6 +420,7 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
           keyboardType: TextInputType.datetime,
           inputFormatters: [expiryMask],
           onChanged: (expiryMasked) {
+            _hasExpiryUnfocused = false;
             if (widget.onChangedExpiryDate != null) {
               widget.onChangedExpiryDate!(expiryMasked);
             }
@@ -416,6 +464,7 @@ class _FancySavedCreditCardInputState extends State<FancySavedCreditCardInput> {
           ),
           cursorColor: _hasError ? widget.cursorErrorColor : widget.cursorColor,
           onChanged: (cvvMasked) {
+            _hasCvvUnfocused = false;
             if (widget.onChangedCvv != null) {
               widget.onChangedCvv!(cvvMasked);
             }
