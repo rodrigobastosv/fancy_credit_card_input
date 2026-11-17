@@ -1,3 +1,7 @@
+## 1.1.2
+
+Add support to validationMode property
+
 ## 1.1.1
 
 Add support to forceErrorText property
